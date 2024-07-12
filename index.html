@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Todo App</title>
     <style>
+      /* Root variables for consistent color scheme */
       :root {
         --primary-color: #3498db;
         --primary-dark: #2980b9;
@@ -16,6 +17,8 @@
         --text-color: #333;
         --card-bg: #ffffff;
       }
+
+      /* Base styles */
       body {
         font-family: "Arial", sans-serif;
         background-color: var(--bg-color);
@@ -25,11 +28,15 @@
         padding: 20px;
         box-sizing: border-box;
       }
+
+      /* Header styles */
       h1 {
         text-align: center;
         color: var(--text-color);
         margin-bottom: 30px;
       }
+
+      /* Form styles */
       #todo-form {
         display: flex;
         flex-direction: column;
@@ -38,18 +45,22 @@
         border-radius: 5px;
         overflow: hidden;
       }
+
       #todo-input {
         padding: 15px;
         font-size: 16px;
         border: none;
         outline: none;
       }
+
       #char-count {
         align-self: flex-end;
         padding: 5px 10px;
         font-size: 12px;
         color: #777;
       }
+
+      /* Button styles */
       button {
         padding: 15px 20px;
         font-size: 16px;
@@ -59,13 +70,17 @@
         cursor: pointer;
         transition: background-color 0.3s ease;
       }
+
       button:hover {
         background-color: var(--primary-dark);
       }
+
+      /* Todo list styles */
       ul {
         list-style-type: none;
         padding: 0;
       }
+
       li {
         display: flex;
         align-items: center;
@@ -78,35 +93,49 @@
         transition: all 0.3s ease;
         word-break: break-word;
       }
+
       li:hover {
         transform: translateY(-2px);
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       }
+
+      /* Completed todo item styles */
       .completed .todo-text {
         text-decoration: line-through;
         opacity: 0.6;
       }
+
+      /* Todo buttons container */
       .todo-buttons {
         display: flex;
         gap: 5px;
       }
+
       .todo-buttons button {
         padding: 8px 12px;
         font-size: 14px;
         border-radius: 3px;
       }
+
+      /* Complete button styles */
       .todo-buttons button:first-child {
         background-color: var(--success-color);
       }
+
       .todo-buttons button:first-child:hover {
         background-color: var(--success-dark);
       }
+
+      /* Delete button styles */
       .todo-buttons button:last-child {
         background-color: var(--danger-color);
       }
+
       .todo-buttons button:last-child:hover {
         background-color: var(--danger-dark);
       }
+
+      /* Animation for new todo items */
       @keyframes fadeIn {
         from {
           opacity: 0;
@@ -117,9 +146,12 @@
           transform: translateY(0);
         }
       }
+
       .fade-in {
         animation: fadeIn 0.3s ease;
       }
+
+      /* Responsive design for mobile devices */
       @media (max-width: 480px) {
         body {
           padding: 10px;
@@ -148,68 +180,79 @@
     <ul id="todo-list"></ul>
 
     <script>
+      // Select DOM elements
       const form = document.getElementById("todo-form");
       const input = document.getElementById("todo-input");
       const charCount = document.getElementById("char-count");
       const todoList = document.getElementById("todo-list");
       const MAX_CHARS = 100;
 
+      // Initialize todos array from localStorage or empty array if not present
       let todos = JSON.parse(localStorage.getItem("todos")) || [];
 
-      function updateCharCount() {
+      // Update character count as user types
+      const updateCharCount = () => {
         const remainingChars = MAX_CHARS - input.value.length;
         charCount.textContent = `${input.value.length} / ${MAX_CHARS}`;
+        // Change color to red when nearing character limit
         charCount.style.color = remainingChars < 20 ? "#e74c3c" : "#777";
-      }
+      };
 
+      // Add input event listener to update character count
       input.addEventListener("input", updateCharCount);
 
-      function saveTodos() {
+      // Save todos to localStorage
+      const saveTodos = () => {
         localStorage.setItem("todos", JSON.stringify(todos));
-      }
+      };
 
-      function renderTodos() {
-        todoList.innerHTML = "";
+      // Render todos in the DOM
+      const renderTodos = () => {
+        todoList.innerHTML = ""; // Clear existing todos
         todos.forEach((todo, index) => {
           const li = document.createElement("li");
           li.classList.add("fade-in");
           if (todo.completed) li.classList.add("completed");
           li.innerHTML = `
-                    <span class="todo-text">${todo.text}</span>
-                    <div class="todo-buttons">
-                        <button onclick="toggleComplete(${index})">${todo.completed ? "Undo" : "Complete"}</button>
-                        <button onclick="deleteTodo(${index})">Delete</button>
-                    </div>
-                `;
+            <span class="todo-text">${todo.text}</span>
+            <div class="todo-buttons">
+              <button onclick="toggleComplete(${index})">${todo.completed ? "Undo" : "Complete"}</button>
+              <button onclick="deleteTodo(${index})">Delete</button>
+            </div>
+          `;
           todoList.appendChild(li);
         });
-      }
+      };
 
+      // Add event listener for form submission
       form.addEventListener("submit", (e) => {
         e.preventDefault();
         addTodo();
       });
 
-      function addTodo() {
-        if (input.value.trim() === "") return;
+      // Add new todo
+      const addTodo = () => {
+        if (input.value.trim() === "") return; // Prevent empty todos
         todos.push({ text: input.value.trim(), completed: false });
         saveTodos();
         renderTodos();
-        input.value = "";
-        updateCharCount();
-      }
+        input.value = ""; // Clear input field
+        updateCharCount(); // Reset character count
+      };
 
-      function toggleComplete(index) {
+      // Toggle todo completion status
+      const toggleComplete = (index) => {
         todos[index].completed = !todos[index].completed;
         saveTodos();
         renderTodos();
-      }
+      };
 
-      function deleteTodo(index) {
+      // Delete todo
+      const deleteTodo = (index) => {
         todos.splice(index, 1);
         saveTodos();
         renderTodos();
-      }
+      };
 
       // Initial render
       renderTodos();
