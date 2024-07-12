@@ -82,7 +82,7 @@
         transform: translateY(-2px);
         box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       }
-      .completed {
+      .completed .todo-text {
         text-decoration: line-through;
         opacity: 0.6;
       }
@@ -175,7 +175,7 @@
           li.classList.add("fade-in");
           if (todo.completed) li.classList.add("completed");
           li.innerHTML = `
-                    <span>${todo.text}</span>
+                    <span class="todo-text">${todo.text}</span>
                     <div class="todo-buttons">
                         <button onclick="toggleComplete(${index})">${todo.completed ? "Undo" : "Complete"}</button>
                         <button onclick="deleteTodo(${index})">Delete</button>
