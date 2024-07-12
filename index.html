@@ -171,21 +171,53 @@
     </style>
   </head>
   <body>
-    <h1>Todo App</h1>
+    <h1 id="app-title">Todo App</h1>
     <form id="todo-form">
       <input type="text" id="todo-input" placeholder="Enter a new task" maxlength="100" required />
       <div id="char-count">0 / 100</div>
-      <button type="submit">Add Task</button>
+      <button type="submit" id="add-button">Add Task</button>
     </form>
     <ul id="todo-list"></ul>
 
     <script>
+      // Language translations
+      const translations = {
+        en: {
+          appTitle: "Todo App",
+          addTask: "Add Task",
+          enterTask: "Enter a new task",
+          complete: "Complete",
+          undo: "Undo",
+          delete: "Delete",
+        },
+        fr: {
+          appTitle: "Liste de Tâches",
+          addTask: "Ajouter une Tâche",
+          enterTask: "Entrez une nouvelle tâche",
+          complete: "Terminer",
+          undo: "Annuler",
+          delete: "Supprimer",
+        },
+      };
+
+      // Determine user's language preference
+      const userLang = navigator.language.split("-")[0]; // Get the language code (e.g., 'en' from 'en-US')
+      const lang = ["en", "fr"].includes(userLang) ? userLang : "en"; // Default to English if not supported
+
+      // Function to get translated text
+      const t = (key) => translations[lang][key];
+
       // Select DOM elements
       const form = document.getElementById("todo-form");
       const input = document.getElementById("todo-input");
       const charCount = document.getElementById("char-count");
       const todoList = document.getElementById("todo-list");
       const MAX_CHARS = 100;
+
+      // Apply translations to static elements
+      document.getElementById("app-title").textContent = t("appTitle");
+      document.getElementById("add-button").textContent = t("addTask");
+      input.placeholder = t("enterTask");
 
       // Initialize todos array from localStorage or empty array if not present
       let todos = JSON.parse(localStorage.getItem("todos")) || [];
@@ -216,8 +248,8 @@
           li.innerHTML = `
             <span class="todo-text">${todo.text}</span>
             <div class="todo-buttons">
-              <button onclick="toggleComplete(${index})">${todo.completed ? "Undo" : "Complete"}</button>
-              <button onclick="deleteTodo(${index})">Delete</button>
+              <button onclick="toggleComplete(${index})">${todo.completed ? t("undo") : t("complete")}</button>
+              <button onclick="deleteTodo(${index})">${t("delete")}</button>
             </div>
           `;
           todoList.appendChild(li);
