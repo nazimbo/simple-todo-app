@@ -93,6 +93,7 @@
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         transition: all 0.3s ease;
         word-break: break-word;
+        cursor: move; /* Add cursor style for draggable items */
       }
 
       li:hover {
@@ -150,6 +151,15 @@
 
       .fade-in {
         animation: fadeIn 0.3s ease;
+      }
+
+      /* Drag and drop styles */
+      .dragging {
+        opacity: 0.5;
+      }
+
+      .drag-over {
+        border-top: 3px solid var(--primary-color);
       }
 
       /* Responsive design for mobile devices */
@@ -253,6 +263,16 @@
               <button onclick="deleteTodo(${index})">${t("delete")}</button>
             </div>
           `;
+          // Add drag and drop attributes
+          li.draggable = true;
+          li.setAttribute("data-index", index);
+          // Add drag and drop event listeners
+          li.addEventListener("dragstart", dragStart);
+          li.addEventListener("dragend", dragEnd);
+          li.addEventListener("dragover", dragOver);
+          li.addEventListener("drop", drop);
+          li.addEventListener("dragenter", dragEnter);
+          li.addEventListener("dragleave", dragLeave);
           todoList.appendChild(li);
         });
       };
@@ -286,6 +306,48 @@
         saveTodos();
         renderTodos();
       };
+
+      // Drag and drop functionality
+      let draggedItem = null;
+
+      function dragStart(e) {
+        draggedItem = this;
+        setTimeout(() => this.classList.add("dragging"), 0);
+      }
+
+      function dragEnd(e) {
+        this.classList.remove("dragging");
+      }
+
+      function dragOver(e) {
+        e.preventDefault();
+      }
+
+      function drop(e) {
+        e.preventDefault();
+        this.classList.remove("drag-over");
+        if (this !== draggedItem) {
+          const draggedIndex = parseInt(draggedItem.getAttribute("data-index"));
+          const targetIndex = parseInt(this.getAttribute("data-index"));
+          if (draggedIndex !== targetIndex) {
+            const [removed] = todos.splice(draggedIndex, 1);
+            todos.splice(targetIndex, 0, removed);
+            saveTodos();
+            renderTodos();
+          }
+        }
+      }
+
+      function dragEnter(e) {
+        e.preventDefault();
+        if (this !== draggedItem) {
+          this.classList.add("drag-over");
+        }
+      }
+
+      function dragLeave(e) {
+        this.classList.remove("drag-over");
+      }
 
       // Initial render
       renderTodos();
