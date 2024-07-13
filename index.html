@@ -156,10 +156,19 @@
       /* Drag and drop styles */
       .dragging {
         opacity: 0.5;
+        background-color: #f0f0f0;
       }
 
       .drag-over {
         border-top: 3px solid var(--primary-color);
+      }
+
+      /* Disable text selection during drag */
+      .disable-selection {
+        user-select: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
       }
 
       /* Responsive design for mobile devices */
@@ -263,16 +272,8 @@
               <button onclick="deleteTodo(${index})">${t("delete")}</button>
             </div>
           `;
-          // Add drag and drop attributes
-          li.draggable = true;
           li.setAttribute("data-index", index);
-          // Add drag and drop event listeners
-          li.addEventListener("dragstart", dragStart);
-          li.addEventListener("dragend", dragEnd);
-          li.addEventListener("dragover", dragOver);
-          li.addEventListener("drop", drop);
-          li.addEventListener("dragenter", dragEnter);
-          li.addEventListener("dragleave", dragLeave);
+          addDragListeners(li);
           todoList.appendChild(li);
         });
       };
@@ -309,45 +310,83 @@
 
       // Drag and drop functionality
       let draggedItem = null;
+      let dragStartY = 0;
+      let dragStartIndex = 0;
 
-      function dragStart(e) {
-        draggedItem = this;
-        setTimeout(() => this.classList.add("dragging"), 0);
-      }
+      const addDragListeners = (element) => {
+        // Mouse events
+        element.addEventListener("mousedown", dragStart);
+        // Touch events
+        element.addEventListener("touchstart", dragStart);
+        element.addEventListener("touchmove", dragMove);
+        element.addEventListener("touchend", dragEnd);
+      };
 
-      function dragEnd(e) {
-        this.classList.remove("dragging");
-      }
+      const dragStart = (e) => {
+        if (e.type === "touchstart") {
+          dragStartY = e.touches[0].clientY;
+        } else {
+          dragStartY = e.clientY;
+        }
+        draggedItem = e.currentTarget;
+        dragStartIndex = parseInt(draggedItem.getAttribute("data-index"));
+        setTimeout(() => {
+          draggedItem.classList.add("dragging");
+          document.body.classList.add("disable-selection");
+        }, 0);
 
-      function dragOver(e) {
+        // Add move and end listeners
+        document.addEventListener("mousemove", dragMove);
+        document.addEventListener("mouseup", dragEnd);
+      };
+
+      const dragMove = (e) => {
+        if (!draggedItem) return;
         e.preventDefault();
-      }
 
-      function drop(e) {
-        e.preventDefault();
-        this.classList.remove("drag-over");
-        if (this !== draggedItem) {
-          const draggedIndex = parseInt(draggedItem.getAttribute("data-index"));
-          const targetIndex = parseInt(this.getAttribute("data-index"));
-          if (draggedIndex !== targetIndex) {
-            const [removed] = todos.splice(draggedIndex, 1);
-            todos.splice(targetIndex, 0, removed);
-            saveTodos();
-            renderTodos();
+        const currentY = e.type === "touchmove" ? e.touches[0].clientY : e.clientY;
+        const listItems = Array.from(todoList.children);
+        const draggedIndex = listItems.indexOf(draggedItem);
+
+        listItems.forEach((item, index) => {
+          if (item !== draggedItem) {
+            const rect = item.getBoundingClientRect();
+            const midY = rect.top + rect.height / 2;
+
+            if (currentY < midY && index < draggedIndex) {
+              item.classList.add("drag-over");
+            } else if (currentY > midY && index > draggedIndex) {
+              item.classList.add("drag-over");
+            } else {
+              item.classList.remove("drag-over");
+            }
           }
-        }
-      }
+        });
+      };
 
-      function dragEnter(e) {
-        e.preventDefault();
-        if (this !== draggedItem) {
-          this.classList.add("drag-over");
-        }
-      }
+      const dragEnd = (e) => {
+        if (!draggedItem) return;
 
-      function dragLeave(e) {
-        this.classList.remove("drag-over");
-      }
+        // Remove move and end listeners
+        document.removeEventListener("mousemove", dragMove);
+        document.removeEventListener("mouseup", dragEnd);
+
+        const listItems = Array.from(todoList.children);
+        const newIndex = listItems.findIndex((item) => item.classList.contains("drag-over"));
+
+        if (newIndex !== -1 && newIndex !== dragStartIndex) {
+          const [removed] = todos.splice(dragStartIndex, 1);
+          todos.splice(newIndex, 0, removed);
+          saveTodos();
+          renderTodos();
+        } else {
+          draggedItem.classList.remove("dragging");
+        }
+
+        listItems.forEach((item) => item.classList.remove("drag-over"));
+        document.body.classList.remove("disable-selection");
+        draggedItem = null;
+      };
 
       // Initial render
       renderTodos();
