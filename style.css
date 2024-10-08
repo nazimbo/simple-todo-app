@@ -1,0 +1,243 @@
+/* Root variables for consistent color scheme */
+:root {
+    --primary-color: #3498db;
+    --primary-dark: #2980b9;
+    --success-color: #2ecc71;
+    --success-dark: #27ae60;
+    --danger-color: #e74c3c;
+    --danger-dark: #c0392b;
+    --bg-color-light: #f5f5f5; /* Light background color */
+    --bg-color-dark: #1a1a1a;  /* Dark background color */
+    --text-color-light: #333;
+    --text-color-dark: #f5f5f5;
+    --card-bg-light: #ffffff;
+    --card-bg-dark: #2c2c2c;
+  }
+  
+  /* Base styles for light mode */
+  body {
+    font-family: "Arial", sans-serif;
+    background-color: var(--bg-color-light);
+    color: var(--text-color-light);
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    box-sizing: border-box;
+    transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition */
+  }
+  
+  /* Header styles */
+  h1 {
+    text-align: center;
+    color: var(--text-color-light);
+    margin-bottom: 30px;
+  }
+  
+  /* Dark mode overrides */
+  body.dark-mode {
+    background-color: var(--bg-color-dark); /* Dark background */
+    color: var(--text-color-dark); /* Dark mode text color */
+  }
+  
+  /* Dark mode heading */
+  body.dark-mode h1 {
+    color: var(--text-color-dark); /* Dark mode heading color */
+  }
+  
+  /* Form styles */
+  #todo-form {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 30px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  
+  /* Input field styles */
+  #todo-input {
+    padding: 15px;
+    font-size: 16px;
+    border: none;
+    outline: none;
+    background-color: var(--card-bg-light); /* Light mode input background */
+    color: var(--text-color-light); /* Light mode input text color */
+  }
+  
+  /* Dark mode for input */
+  body.dark-mode #todo-input {
+    background-color: var(--card-bg-dark); /* Dark mode input background */
+    color: var(--text-color-dark); /* Dark mode input text color */
+  }
+  
+  /* Character count styles */
+  #char-count {
+    align-self: flex-end;
+    padding: 5px 10px;
+    font-size: 12px;
+    color: #777;
+  }
+  
+  /* Button styles */
+  button {
+    padding: 15px 20px;
+    font-size: 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  /* Button hover */
+  button:hover {
+    background-color: var(--primary-dark);
+  }
+  
+  /* Dark mode for buttons */
+  body.dark-mode button {
+    background-color: var(--primary-dark); /* Dark mode button background */
+  }
+  
+  /* Dark mode button hover */
+  body.dark-mode button:hover {
+    background-color: var(--primary-color); /* Dark mode button hover background */
+  }
+  
+  /* Todo list styles */
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 15px;
+    background-color: var(--card-bg-light); /* Light mode card background */
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    word-break: break-word;
+  }
+  
+  /* Dark mode for list items */
+  body.dark-mode li {
+    background-color: var(--card-bg-dark); /* Dark mode card background */
+  }
+  
+  /* Todo list item hover effect */
+  li:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Completed todo item styles */
+  .completed .todo-text {
+    text-decoration: line-through;
+    opacity: 0.6;
+  }
+  
+  /* Todo buttons container */
+  .todo-buttons {
+    display: flex;
+    gap: 5px;
+  }
+  
+  /* Complete button styles */
+  .todo-buttons button:first-child {
+    background-color: var(--success-color);
+  }
+  
+  .todo-buttons button:first-child:hover {
+    background-color: var(--success-dark);
+  }
+  
+  /* Delete button styles */
+  .todo-buttons button:last-child {
+    background-color: var(--danger-color);
+  }
+  
+  .todo-buttons button:last-child:hover {
+    background-color: var(--danger-dark);
+  }
+  
+  /* Animation for new todo items */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.3s ease;
+  }
+  
+  /* Drag and drop styles */
+  .dragging {
+    opacity: 0.5;
+    background-color: #f0f0f0;
+  }
+  
+  .drag-over {
+    border-top: 3px solid var(--primary-color);
+  }
+  
+  /* Disable text selection during drag */
+  .disable-selection {
+    user-select: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+  }
+  
+  /* Dark Mode Toggle Button */
+  .dark-mode-toggle {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    color: var(--text-color-light); /* Light mode toggle button color */
+    font-size: 24px;
+    cursor: pointer;
+  }
+  
+  /* Dark mode toggle button color */
+  body.dark-mode .dark-mode-toggle {
+    color: var(--text-color-dark); /* Dark mode toggle button color */
+  }
+  
+  /* Responsive design for mobile devices */
+  @media (max-width: 480px) {
+    body {
+      padding: 10px;
+    }
+  
+    li {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .todo-buttons {
+      margin-top: 10px;
+      width: 100%;
+    }
+  
+    .todo-buttons button {
+      flex: 1;
+    }
+  
+    .dark-mode-toggle {
+      top: 10px;
+      right: 10px;
+    }
+  }
+  
