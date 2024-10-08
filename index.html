@@ -19,6 +19,13 @@
         --card-bg: #ffffff;
       }
 
+      /* Dark mode variables */
+      .dark-mode {
+        --bg-color: #1a1a1a;
+        --text-color: #f5f5f5;
+        --card-bg: #2c2c2c;
+      }
+
       /* Base styles */
       body {
         font-family: "Arial", sans-serif;
@@ -28,6 +35,7 @@
         margin: 0 auto;
         padding: 20px;
         box-sizing: border-box;
+        transition: background-color 0.3s ease, color 0.3s ease;
       }
 
       /* Header styles */
@@ -52,6 +60,8 @@
         font-size: 16px;
         border: none;
         outline: none;
+        background-color: var(--card-bg);
+        color: var(--text-color);
       }
 
       #char-count {
@@ -171,6 +181,18 @@
         -ms-user-select: none;
       }
 
+      /* Dark mode toggle styles */
+      .dark-mode-toggle {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        background: none;
+        border: none;
+        color: var(--text-color);
+        font-size: 24px;
+        cursor: pointer;
+      }
+
       /* Responsive design for mobile devices */
       @media (max-width: 480px) {
         body {
@@ -187,10 +209,15 @@
         .todo-buttons button {
           flex: 1;
         }
+        .dark-mode-toggle {
+          top: 10px;
+          right: 10px;
+        }
       }
     </style>
   </head>
   <body>
+    <button class="dark-mode-toggle" id="dark-mode-toggle">🌙</button>
     <h1 id="app-title">Todo App</h1>
     <form id="todo-form">
       <input type="text" id="todo-input" placeholder="Enter a new task" maxlength="100" required />
@@ -232,6 +259,7 @@
       const input = document.getElementById("todo-input");
       const charCount = document.getElementById("char-count");
       const todoList = document.getElementById("todo-list");
+      const darkModeToggle = document.getElementById("dark-mode-toggle");
       const MAX_CHARS = 100;
 
       // Apply translations to static elements
@@ -241,6 +269,20 @@
 
       // Initialize todos array from localStorage or empty array if not present
       let todos = JSON.parse(localStorage.getItem("todos")) || [];
+
+      // Dark mode functionality
+      const isDarkMode = localStorage.getItem("darkMode") === "true";
+      if (isDarkMode) {
+        document.body.classList.add("dark-mode");
+        darkModeToggle.textContent = "☀️";
+      }
+
+      darkModeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("dark-mode");
+        const isDark = document.body.classList.contains("dark-mode");
+        localStorage.setItem("darkMode", isDark);
+        darkModeToggle.textContent = isDark ? "☀️" : "🌙";
+      });
 
       // Update character count as user types
       const updateCharCount = () => {
