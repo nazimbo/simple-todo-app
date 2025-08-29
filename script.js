@@ -1,3 +1,7 @@
+/**
+ * Language translations for internationalization support
+ * Currently supports English (en) and French (fr)
+ */
 // Language translations
 const translations = {
     en: {
@@ -18,10 +22,19 @@ const translations = {
     },
   };
   
+  /**
+   * Determine user's language preference from browser settings
+   * Falls back to English if the detected language is not supported
+   */
   // Determine user's language preference
   const userLang = navigator.language.split("-")[0]; // Get the language code (e.g., 'en' from 'en-US')
   const lang = ["en", "fr"].includes(userLang) ? userLang : "en"; // Default to English if not supported
   
+  /**
+   * Get translated text for a given key
+   * @param {string} key - The translation key to look up
+   * @returns {string} The translated text in the current language
+   */
   // Function to get translated text
   const t = (key) => translations[lang][key];
   
@@ -41,6 +54,11 @@ const translations = {
   // Initialize todos array from localStorage or empty array if not present
   let todos = [];
   
+  /**
+   * Check if localStorage is available and functional
+   * Some browsers or privacy modes may disable localStorage
+   * @returns {boolean} True if localStorage is available, false otherwise
+   */
   // Check if localStorage is available
   const isLocalStorageAvailable = () => {
     try {
@@ -56,6 +74,10 @@ const translations = {
   // In-memory fallback storage when localStorage is unavailable
   let memoryStorage = {};
   
+  /**
+   * Safe storage wrapper that falls back to memory storage
+   * Provides a consistent API whether localStorage is available or not
+   */
   // Safe storage wrapper that falls back to memory storage
   const safeStorage = {
     getItem: (key) => {
@@ -80,6 +102,14 @@ const translations = {
     }
   };
   
+  /**
+   * Validate and sanitize a single todo object
+   * Removes HTML tags, control characters, and enforces length limits
+   * @param {Object} todo - The todo object to validate
+   * @param {string} todo.text - The todo text content
+   * @param {boolean} todo.completed - The completion status
+   * @returns {Object|null} Sanitized todo object or null if invalid
+   */
   // Validate and sanitize a single todo object
   const validateTodo = (todo) => {
     if (!todo || typeof todo !== 'object' || todo === null) {
@@ -112,6 +142,11 @@ const translations = {
     };
   };
   
+  /**
+   * Safe function to load todos from storage
+   * Validates and sanitizes all loaded data, handles corrupted data gracefully
+   * @returns {Array<Object>} Array of validated todo objects
+   */
   // Safe function to load todos from storage
   const loadTodos = () => {
     try {
@@ -217,6 +252,10 @@ const translations = {
     darkModeToggle.textContent = isDark ? "☀️" : "🌙"; // Toggle button icon based on mode
   });
   
+  /**
+   * Update character count display as user types
+   * Changes color when approaching limit and disables button for empty input
+   */
   // **Update character count as user types**
   const updateCharCount = () => {
     const remainingChars = MAX_CHARS - input.value.length;
@@ -230,6 +269,10 @@ const translations = {
   // Add input event listener to update character count
   input.addEventListener("input", updateCharCount);
   
+  /**
+   * Save todos array to persistent storage
+   * Handles storage errors gracefully with user feedback
+   */
   // **Save todos to storage**
   const saveTodos = () => {
     try {
@@ -247,6 +290,10 @@ const translations = {
     }
   };
   
+  /**
+   * Render todos in the DOM with full accessibility support
+   * Creates list items with ARIA attributes, keyboard navigation, and drag-drop
+   */
   // **Render todos in the DOM**
   const renderTodos = () => {
     todoList.innerHTML = ""; // Clear existing todos
@@ -311,6 +358,11 @@ const translations = {
     updateAriaLiveRegion();
   };
   
+  /**
+   * Validate and sanitize user input before adding todos
+   * @param {string} text - Raw user input text
+   * @returns {string|null} Sanitized text or null if invalid
+   */
   // **Input validation and sanitization**
   const validateAndSanitizeInput = (text) => {
     // Trim whitespace
@@ -334,6 +386,10 @@ const translations = {
     return text.length > 0 ? text : null;
   };
 
+  /**
+   * Add a new todo item after validation and sanitization
+   * Prevents duplicates and focuses the new item for accessibility
+   */
   // **Add new todo**
   const addTodo = () => {
     const sanitizedText = validateAndSanitizeInput(input.value);
@@ -374,6 +430,10 @@ const translations = {
     addTodo(); // Add the new todo
   });
   
+  /**
+   * Toggle the completion status of a todo item
+   * @param {number} index - Index of the todo to toggle
+   */
   // **Toggle todo completion status**
   const toggleComplete = (index) => {
     const todo = todos[index];
@@ -395,6 +455,10 @@ const translations = {
     }, 100);
   };
   
+  /**
+   * Delete a todo item with proper focus management
+   * @param {number} index - Index of the todo to delete
+   */
   // **Delete a todo**
   const deleteTodo = (index) => {
     const deletedTodo = todos[index];
@@ -429,11 +493,20 @@ const translations = {
     }, 100);
   };
   
-  // **Drag and drop functionality (same as before)**
+  /**
+   * Drag and drop functionality for reordering todos
+   * Supports both mouse and touch events
+   */
+  // **Drag and drop functionality**
   let draggedItem = null;
   let dragStartY = 0;
   let dragStartIndex = 0;
   
+  /**
+   * Add drag and drop event listeners to a todo element
+   * Supports both mouse and touch interactions for reordering
+   * @param {HTMLElement} element - The todo list item element
+   */
   const addDragListeners = (element) => {
     element.addEventListener("mousedown", dragStart); // Mouse drag start
     element.addEventListener("touchstart", dragStart); // Touch drag start
@@ -441,6 +514,10 @@ const translations = {
     element.addEventListener("touchend", dragEnd); // Touch drag end
   };
   
+  /**
+   * Initialize drag operation - stores initial position and sets up visual feedback
+   * @param {Event} e - Mouse or touch event
+   */
   const dragStart = (e) => {
     dragStartY = e.type === "touchstart" ? e.touches[0].clientY : e.clientY;
     draggedItem = e.currentTarget;
@@ -454,6 +531,10 @@ const translations = {
     document.addEventListener("mouseup", dragEnd);
   };
   
+  /**
+   * Handle drag movement - provides visual feedback for drop targets
+   * @param {Event} e - Mouse or touch move event
+   */
   const dragMove = (e) => {
     if (!draggedItem) return;
     e.preventDefault();
@@ -462,6 +543,7 @@ const translations = {
     const listItems = Array.from(todoList.children);
     const draggedIndex = listItems.indexOf(draggedItem);
   
+    // Add visual feedback to potential drop targets
     listItems.forEach((item, index) => {
       if (item !== draggedItem) {
         const rect = item.getBoundingClientRect();
@@ -478,6 +560,10 @@ const translations = {
     });
   };
   
+  /**
+   * Complete drag operation - reorder todos if dropped on valid target
+   * Cleans up visual feedback and updates data if needed
+   */
   const dragEnd = () => {
     if (!draggedItem) return;
   
@@ -487,6 +573,7 @@ const translations = {
     const listItems = Array.from(todoList.children);
     const newIndex = listItems.findIndex((item) => item.classList.contains("drag-over"));
   
+    // Reorder todos if dropped on a different position
     if (newIndex !== -1 && newIndex !== dragStartIndex) {
       const [removed] = todos.splice(dragStartIndex, 1);
       todos.splice(newIndex, 0, removed);
@@ -496,6 +583,7 @@ const translations = {
       draggedItem.classList.remove("dragging");
     }
   
+    // Clean up visual feedback
     listItems.forEach((item) => item.classList.remove("drag-over"));
     document.body.classList.remove("disable-selection");
     draggedItem = null;
@@ -503,6 +591,11 @@ const translations = {
   
   // **Keyboard navigation and accessibility functions**
   
+  /**
+   * Handle keyboard navigation and shortcuts for todo items
+   * @param {KeyboardEvent} e - The keyboard event
+   * @param {number} index - Index of the current todo item
+   */
   // Handle keyboard navigation for todo items
   const handleTodoKeydown = (e, index) => {
     const currentItem = e.currentTarget;
@@ -558,6 +651,11 @@ const translations = {
     }
   };
   
+  /**
+   * Move a todo item to a new position in the list
+   * @param {number} fromIndex - Current index of the todo
+   * @param {number} toIndex - Target index for the todo
+   */
   // Move todo item to new position
   const moveTodo = (fromIndex, toIndex) => {
     if (toIndex < 0 || toIndex >= todos.length || fromIndex === toIndex) {
@@ -582,9 +680,17 @@ const translations = {
     // This function exists for consistency with the renderTodos call
   };
   
+  /**
+   * Create and manage ARIA live region for screen reader announcements
+   * Provides status updates for accessibility
+   */
   // Create and manage ARIA live region for announcements
   let ariaLiveRegion = null;
   
+  /**
+   * Create invisible ARIA live region for screen reader announcements
+   * Positioned off-screen but accessible to assistive technology
+   */
   const createAriaLiveRegion = () => {
     if (!ariaLiveRegion) {
       ariaLiveRegion = document.createElement('div');
@@ -599,6 +705,10 @@ const translations = {
     }
   };
   
+  /**
+   * Update ARIA live region with current todo statistics
+   * Announces changes to screen readers without being visually intrusive
+   */
   const updateAriaLiveRegion = () => {
     if (!ariaLiveRegion) return;
     
@@ -609,6 +719,10 @@ const translations = {
     ariaLiveRegion.textContent = `${totalCount} todos total. ${pendingCount} pending, ${completedCount} completed.`;
   };
   
+  /**
+   * Global keyboard shortcuts for enhanced accessibility
+   * Ctrl+/ focuses input, Ctrl+L focuses first todo
+   */
   // Add global keyboard shortcuts
   document.addEventListener('keydown', (e) => {
     // Focus input with Ctrl/Cmd + /
