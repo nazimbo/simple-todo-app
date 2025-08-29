@@ -39,12 +39,90 @@ const translations = {
   input.placeholder = t("enterTask");
   
   // Initialize todos array from localStorage or empty array if not present
-  let todos = JSON.parse(localStorage.getItem("todos")) || [];
+  let todos = [];
+  
+  // Check if localStorage is available
+  const isLocalStorageAvailable = () => {
+    try {
+      const test = '__localStorage_test__';
+      localStorage.setItem(test, test);
+      localStorage.removeItem(test);
+      return true;
+    } catch (error) {
+      return false;
+    }
+  };
+  
+  // In-memory fallback storage when localStorage is unavailable
+  let memoryStorage = {};
+  
+  // Safe storage wrapper that falls back to memory storage
+  const safeStorage = {
+    getItem: (key) => {
+      if (isLocalStorageAvailable()) {
+        return localStorage.getItem(key);
+      }
+      return memoryStorage[key] || null;
+    },
+    setItem: (key, value) => {
+      if (isLocalStorageAvailable()) {
+        localStorage.setItem(key, value);
+      } else {
+        memoryStorage[key] = value;
+      }
+    },
+    removeItem: (key) => {
+      if (isLocalStorageAvailable()) {
+        localStorage.removeItem(key);
+      } else {
+        delete memoryStorage[key];
+      }
+    }
+  };
+  
+  // Safe function to load todos from storage
+  const loadTodos = () => {
+    try {
+      const storedTodos = safeStorage.getItem("todos");
+      if (storedTodos) {
+        const parsed = JSON.parse(storedTodos);
+        // Validate that parsed data is an array of valid todo objects
+        if (Array.isArray(parsed)) {
+          return parsed.filter(todo => 
+            todo && 
+            typeof todo === 'object' && 
+            typeof todo.text === 'string' && 
+            typeof todo.completed === 'boolean'
+          );
+        }
+      }
+      return [];
+    } catch (error) {
+      console.error("Failed to load todos from storage:", error);
+      // Optionally clear corrupted data
+      try {
+        safeStorage.removeItem("todos");
+      } catch (clearError) {
+        console.error("Failed to clear corrupted todos:", clearError);
+      }
+      return [];
+    }
+  };
+  
+  todos = loadTodos();
   
   // **Dark mode functionality**
   // Check if dark mode preference is set in localStorage or matches system preferences
   const isSystemDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches; // System dark mode preference
-  const isDarkMode = localStorage.getItem("darkMode") === "true" || (!localStorage.getItem("darkMode") && isSystemDarkMode);
+  let isDarkMode = false;
+  
+  try {
+    const darkModePreference = safeStorage.getItem("darkMode");
+    isDarkMode = darkModePreference === "true" || (!darkModePreference && isSystemDarkMode);
+  } catch (error) {
+    console.error("Failed to load dark mode preference:", error);
+    isDarkMode = isSystemDarkMode; // Fall back to system preference
+  }
   
   if (isDarkMode) {
     document.body.classList.add("dark-mode"); // Enable dark mode
@@ -57,7 +135,11 @@ const translations = {
   darkModeToggle.addEventListener("click", () => {
     document.body.classList.toggle("dark-mode"); // Toggle dark mode
     const isDark = document.body.classList.contains("dark-mode");
-    localStorage.setItem("darkMode", isDark); // Save dark mode preference in localStorage
+    try {
+      safeStorage.setItem("darkMode", isDark); // Save dark mode preference in storage
+    } catch (error) {
+      console.error("Failed to save dark mode preference:", error);
+    }
     darkModeToggle.textContent = isDark ? "☀️" : "🌙"; // Toggle button icon based on mode
   });
   
@@ -74,9 +156,21 @@ const translations = {
   // Add input event listener to update character count
   input.addEventListener("input", updateCharCount);
   
-  // **Save todos to localStorage**
+  // **Save todos to storage**
   const saveTodos = () => {
-    localStorage.setItem("todos", JSON.stringify(todos)); // Store todos array in localStorage
+    try {
+      safeStorage.setItem("todos", JSON.stringify(todos)); // Store todos array in storage
+    } catch (error) {
+      console.error("Failed to save todos to storage:", error);
+      // Show user feedback for storage issues
+      if (error.name === 'QuotaExceededError') {
+        alert("Storage quota exceeded. Please clear some browser data or reduce the number of todos.");
+      } else if (!isLocalStorageAvailable()) {
+        console.warn("Using temporary memory storage - todos will not persist after page refresh.");
+      } else {
+        alert("Failed to save todos. Your changes may not be preserved.");
+      }
+    }
   };
   
   // **Render todos in the DOM**
