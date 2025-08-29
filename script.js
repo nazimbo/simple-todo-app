@@ -80,26 +80,100 @@ const translations = {
     }
   };
   
+  // Validate and sanitize a single todo object
+  const validateTodo = (todo) => {
+    if (!todo || typeof todo !== 'object' || todo === null) {
+      return null;
+    }
+    
+    // Validate required properties
+    if (typeof todo.text !== 'string' || typeof todo.completed !== 'boolean') {
+      return null;
+    }
+    
+    // Sanitize text content to prevent XSS
+    let sanitizedText = todo.text;
+    
+    // Remove any HTML tags and scripts
+    sanitizedText = sanitizedText.replace(/<[^>]*>/g, '');
+    
+    // Remove null bytes and control characters
+    sanitizedText = sanitizedText.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    
+    // Trim and validate length
+    sanitizedText = sanitizedText.trim();
+    if (sanitizedText.length === 0 || sanitizedText.length > MAX_CHARS) {
+      return null;
+    }
+    
+    return {
+      text: sanitizedText,
+      completed: Boolean(todo.completed)
+    };
+  };
+  
   // Safe function to load todos from storage
   const loadTodos = () => {
     try {
       const storedTodos = safeStorage.getItem("todos");
-      if (storedTodos) {
-        const parsed = JSON.parse(storedTodos);
-        // Validate that parsed data is an array of valid todo objects
-        if (Array.isArray(parsed)) {
-          return parsed.filter(todo => 
-            todo && 
-            typeof todo === 'object' && 
-            typeof todo.text === 'string' && 
-            typeof todo.completed === 'boolean'
-          );
+      if (!storedTodos) {
+        return [];
+      }
+      
+      // Validate the stored data format before parsing
+      if (typeof storedTodos !== 'string') {
+        console.warn("Invalid todos data format in storage");
+        safeStorage.removeItem("todos");
+        return [];
+      }
+      
+      // Check for basic JSON structure before parsing
+      if (!storedTodos.trim().startsWith('[') || !storedTodos.trim().endsWith(']')) {
+        console.warn("Invalid todos JSON structure in storage");
+        safeStorage.removeItem("todos");
+        return [];
+      }
+      
+      let parsed;
+      try {
+        parsed = JSON.parse(storedTodos);
+      } catch (parseError) {
+        console.error("JSON parsing failed for todos:", parseError);
+        safeStorage.removeItem("todos");
+        return [];
+      }
+      
+      // Validate that parsed data is an array
+      if (!Array.isArray(parsed)) {
+        console.warn("Todos data is not an array");
+        safeStorage.removeItem("todos");
+        return [];
+      }
+      
+      // Validate and sanitize each todo item
+      const validTodos = [];
+      for (const todo of parsed) {
+        const validatedTodo = validateTodo(todo);
+        if (validatedTodo) {
+          validTodos.push(validatedTodo);
         }
       }
-      return [];
+      
+      // If we filtered out items, save the cleaned data back
+      if (validTodos.length !== parsed.length) {
+        console.warn(`Filtered out ${parsed.length - validTodos.length} invalid todos`);
+        try {
+          safeStorage.setItem("todos", JSON.stringify(validTodos));
+        } catch (saveError) {
+          console.error("Failed to save cleaned todos:", saveError);
+        }
+      }
+      
+      return validTodos;
+      
     } catch (error) {
       console.error("Failed to load todos from storage:", error);
-      // Optionally clear corrupted data
+      // Clear potentially corrupted data
       try {
         safeStorage.removeItem("todos");
       } catch (clearError) {
