@@ -255,24 +255,43 @@ const translations = {
       li.classList.add("fade-in"); // Add fade-in animation
       if (todo.completed) li.classList.add("completed"); // Apply completed style
       
+      // Add accessibility attributes
+      li.setAttribute("role", "listitem");
+      li.setAttribute("aria-labelledby", `todo-text-${index}`);
+      li.setAttribute("aria-describedby", `todo-buttons-${index}`);
+      li.setAttribute("tabindex", "0");
+      
       // Create todo text span safely
       const todoText = document.createElement("span");
       todoText.className = "todo-text";
+      todoText.id = `todo-text-${index}`;
       todoText.textContent = todo.text; // Safe text insertion - prevents XSS
+      todoText.setAttribute("aria-label", `Todo item: ${todo.text}${todo.completed ? ' (completed)' : ' (pending)'}`);
       
       // Create buttons container
       const buttonsDiv = document.createElement("div");
       buttonsDiv.className = "todo-buttons";
+      buttonsDiv.id = `todo-buttons-${index}`;
+      buttonsDiv.setAttribute("role", "group");
+      buttonsDiv.setAttribute("aria-label", "Todo actions");
       
       // Create complete/undo button
       const completeButton = document.createElement("button");
       completeButton.textContent = todo.completed ? t("undo") : t("complete");
+      completeButton.setAttribute("aria-label", 
+        todo.completed ? `Mark "${todo.text}" as incomplete` : `Mark "${todo.text}" as complete`
+      );
+      completeButton.setAttribute("aria-pressed", todo.completed ? "true" : "false");
       completeButton.addEventListener("click", () => toggleComplete(index));
       
       // Create delete button
       const deleteButton = document.createElement("button");
       deleteButton.textContent = t("delete");
+      deleteButton.setAttribute("aria-label", `Delete todo "${todo.text}"`);
       deleteButton.addEventListener("click", () => deleteTodo(index));
+      
+      // Add keyboard navigation for list items
+      li.addEventListener("keydown", (e) => handleTodoKeydown(e, index));
       
       // Append buttons to container
       buttonsDiv.appendChild(completeButton);
@@ -284,8 +303,12 @@ const translations = {
       
       li.setAttribute("data-index", index);
       addDragListeners(li); // Add drag-and-drop listeners
+      addKeyboardDragListeners(); // Add keyboard drag-and-drop
       todoList.appendChild(li); // Append to the todo list
     });
+    
+    // Update live region for screen readers
+    updateAriaLiveRegion();
   };
   
   // **Input validation and sanitization**
@@ -331,6 +354,18 @@ const translations = {
     renderTodos(); // Re-render the list
     input.value = ""; // Clear input field
     updateCharCount(); // Reset character count
+    
+    // Focus the newly added todo for accessibility
+    setTimeout(() => {
+      const newTodo = todoList.querySelector(`li:last-child`);
+      if (newTodo) {
+        newTodo.focus();
+        // Announce the addition to screen readers
+        if (ariaLiveRegion) {
+          ariaLiveRegion.textContent = `Added new todo: ${sanitizedText}`;
+        }
+      }
+    }, 100);
   };
   
   // **Form submission listener**
@@ -341,16 +376,57 @@ const translations = {
   
   // **Toggle todo completion status**
   const toggleComplete = (index) => {
-    todos[index].completed = !todos[index].completed; // Toggle the completion status
+    const todo = todos[index];
+    todo.completed = !todo.completed; // Toggle the completion status
     saveTodos(); // Save updated todos to localStorage
     renderTodos(); // Re-render the list
+    
+    // Focus the toggled item and announce change
+    setTimeout(() => {
+      const toggledItem = todoList.querySelector(`li[data-index="${index}"]`);
+      if (toggledItem) {
+        toggledItem.focus();
+        // Announce the status change to screen readers
+        if (ariaLiveRegion) {
+          const status = todo.completed ? 'completed' : 'marked as incomplete';
+          ariaLiveRegion.textContent = `Todo "${todo.text}" ${status}`;
+        }
+      }
+    }, 100);
   };
   
   // **Delete a todo**
   const deleteTodo = (index) => {
+    const deletedTodo = todos[index];
     todos.splice(index, 1); // Remove the selected todo
     saveTodos(); // Save updated todos to localStorage
     renderTodos(); // Re-render the list
+    
+    // Focus management after deletion
+    setTimeout(() => {
+      const items = Array.from(todoList.children);
+      let focusTarget = null;
+      
+      // Focus the item at the same index, or the last item, or the input
+      if (items[index]) {
+        focusTarget = items[index];
+      } else if (items[index - 1]) {
+        focusTarget = items[index - 1];
+      } else if (items.length > 0) {
+        focusTarget = items[0];
+      } else {
+        focusTarget = input;
+      }
+      
+      if (focusTarget) {
+        focusTarget.focus();
+      }
+      
+      // Announce the deletion to screen readers
+      if (ariaLiveRegion) {
+        ariaLiveRegion.textContent = `Deleted todo: ${deletedTodo.text}`;
+      }
+    }, 100);
   };
   
   // **Drag and drop functionality (same as before)**
@@ -424,6 +500,133 @@ const translations = {
     document.body.classList.remove("disable-selection");
     draggedItem = null;
   };
+  
+  // **Keyboard navigation and accessibility functions**
+  
+  // Handle keyboard navigation for todo items
+  const handleTodoKeydown = (e, index) => {
+    const currentItem = e.currentTarget;
+    const items = Array.from(todoList.children);
+    const currentIndex = items.indexOf(currentItem);
+    
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        const nextItem = items[currentIndex + 1];
+        if (nextItem) nextItem.focus();
+        break;
+        
+      case 'ArrowUp':
+        e.preventDefault();
+        const prevItem = items[currentIndex - 1];
+        if (prevItem) prevItem.focus();
+        break;
+        
+      case 'Home':
+        e.preventDefault();
+        if (items[0]) items[0].focus();
+        break;
+        
+      case 'End':
+        e.preventDefault();
+        if (items[items.length - 1]) items[items.length - 1].focus();
+        break;
+        
+      case 'Enter':
+      case ' ':
+        e.preventDefault();
+        toggleComplete(index);
+        break;
+        
+      case 'Delete':
+      case 'Backspace':
+        e.preventDefault();
+        deleteTodo(index);
+        break;
+        
+      case 'Control+ArrowUp':
+      case 'Meta+ArrowUp':
+        e.preventDefault();
+        moveTodo(index, index - 1);
+        break;
+        
+      case 'Control+ArrowDown':
+      case 'Meta+ArrowDown':
+        e.preventDefault();
+        moveTodo(index, index + 1);
+        break;
+    }
+  };
+  
+  // Move todo item to new position
+  const moveTodo = (fromIndex, toIndex) => {
+    if (toIndex < 0 || toIndex >= todos.length || fromIndex === toIndex) {
+      return;
+    }
+    
+    const [removed] = todos.splice(fromIndex, 1);
+    todos.splice(toIndex, 0, removed);
+    saveTodos();
+    renderTodos();
+    
+    // Focus the moved item
+    const items = Array.from(todoList.children);
+    if (items[toIndex]) {
+      items[toIndex].focus();
+    }
+  };
+  
+  // Add keyboard drag-and-drop functionality
+  const addKeyboardDragListeners = () => {
+    // Keyboard drag functionality is handled in handleTodoKeydown
+    // This function exists for consistency with the renderTodos call
+  };
+  
+  // Create and manage ARIA live region for announcements
+  let ariaLiveRegion = null;
+  
+  const createAriaLiveRegion = () => {
+    if (!ariaLiveRegion) {
+      ariaLiveRegion = document.createElement('div');
+      ariaLiveRegion.setAttribute('aria-live', 'polite');
+      ariaLiveRegion.setAttribute('aria-atomic', 'true');
+      ariaLiveRegion.style.position = 'absolute';
+      ariaLiveRegion.style.left = '-10000px';
+      ariaLiveRegion.style.width = '1px';
+      ariaLiveRegion.style.height = '1px';
+      ariaLiveRegion.style.overflow = 'hidden';
+      document.body.appendChild(ariaLiveRegion);
+    }
+  };
+  
+  const updateAriaLiveRegion = () => {
+    if (!ariaLiveRegion) return;
+    
+    const completedCount = todos.filter(todo => todo.completed).length;
+    const totalCount = todos.length;
+    const pendingCount = totalCount - completedCount;
+    
+    ariaLiveRegion.textContent = `${totalCount} todos total. ${pendingCount} pending, ${completedCount} completed.`;
+  };
+  
+  // Add global keyboard shortcuts
+  document.addEventListener('keydown', (e) => {
+    // Focus input with Ctrl/Cmd + /
+    if ((e.ctrlKey || e.metaKey) && e.key === '/') {
+      e.preventDefault();
+      input.focus();
+    }
+    
+    // Focus first todo with Ctrl/Cmd + L
+    if ((e.ctrlKey || e.metaKey) && e.key === 'l') {
+      e.preventDefault();
+      const firstTodo = todoList.querySelector('li');
+      if (firstTodo) firstTodo.focus();
+    }
+  });
+  
+  // Initialize accessibility features
+  createAriaLiveRegion();
   
   // Initial render
   renderTodos(); // Render the initial list of todos
