@@ -86,13 +86,34 @@ const translations = {
       const li = document.createElement("li");
       li.classList.add("fade-in"); // Add fade-in animation
       if (todo.completed) li.classList.add("completed"); // Apply completed style
-      li.innerHTML = `
-        <span class="todo-text">${todo.text}</span>
-        <div class="todo-buttons">
-          <button onclick="toggleComplete(${index})">${todo.completed ? t("undo") : t("complete")}</button>
-          <button onclick="deleteTodo(${index})">${t("delete")}</button>
-        </div>
-      `;
+      
+      // Create todo text span safely
+      const todoText = document.createElement("span");
+      todoText.className = "todo-text";
+      todoText.textContent = todo.text; // Safe text insertion - prevents XSS
+      
+      // Create buttons container
+      const buttonsDiv = document.createElement("div");
+      buttonsDiv.className = "todo-buttons";
+      
+      // Create complete/undo button
+      const completeButton = document.createElement("button");
+      completeButton.textContent = todo.completed ? t("undo") : t("complete");
+      completeButton.addEventListener("click", () => toggleComplete(index));
+      
+      // Create delete button
+      const deleteButton = document.createElement("button");
+      deleteButton.textContent = t("delete");
+      deleteButton.addEventListener("click", () => deleteTodo(index));
+      
+      // Append buttons to container
+      buttonsDiv.appendChild(completeButton);
+      buttonsDiv.appendChild(deleteButton);
+      
+      // Append elements to list item
+      li.appendChild(todoText);
+      li.appendChild(buttonsDiv);
+      
       li.setAttribute("data-index", index);
       addDragListeners(li); // Add drag-and-drop listeners
       todoList.appendChild(li); // Append to the todo list
