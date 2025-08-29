@@ -120,10 +120,45 @@ const translations = {
     });
   };
   
+  // **Input validation and sanitization**
+  const validateAndSanitizeInput = (text) => {
+    // Trim whitespace
+    text = text.trim();
+    
+    // Check if empty after trimming
+    if (text === "") return null;
+    
+    // Enforce maximum length (already limited by HTML maxlength, but double-check)
+    if (text.length > MAX_CHARS) {
+      text = text.substring(0, MAX_CHARS);
+    }
+    
+    // Remove null bytes and other control characters that could cause issues
+    text = text.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    
+    // Remove leading/trailing whitespace again after sanitization
+    text = text.trim();
+    
+    // Final check if still has content
+    return text.length > 0 ? text : null;
+  };
+
   // **Add new todo**
   const addTodo = () => {
-    if (input.value.trim() === "") return; // Prevent empty todos
-    todos.push({ text: input.value.trim(), completed: false }); // Add new todo to the array
+    const sanitizedText = validateAndSanitizeInput(input.value);
+    
+    if (sanitizedText === null) return; // Prevent empty or invalid todos
+    
+    // Check for duplicate todos (optional quality improvement)
+    const isDuplicate = todos.some(todo => todo.text.toLowerCase() === sanitizedText.toLowerCase());
+    if (isDuplicate) {
+      // Could show user feedback here, but for now just silently ignore
+      input.value = ""; // Clear input field
+      updateCharCount(); // Reset character count
+      return;
+    }
+    
+    todos.push({ text: sanitizedText, completed: false }); // Add sanitized todo to the array
     saveTodos(); // Save updated todos to localStorage
     renderTodos(); // Re-render the list
     input.value = ""; // Clear input field
