@@ -350,7 +350,6 @@ const translations = {
       
       li.setAttribute("data-index", index);
       addDragListeners(li); // Add drag-and-drop listeners
-      addKeyboardDragListeners(); // Add keyboard drag-and-drop
       todoList.appendChild(li); // Append to the todo list
     });
     
@@ -601,52 +600,58 @@ const translations = {
     const currentItem = e.currentTarget;
     const items = Array.from(todoList.children);
     const currentIndex = items.indexOf(currentItem);
-    
+
+    // Ctrl/Cmd + Arrow reorders the item. Checked before the switch because
+    // KeyboardEvent.key only ever holds the single key (e.g. "ArrowUp"),
+    // never a combined "Control+ArrowUp" string.
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+      e.preventDefault();
+      moveTodo(index, e.key === 'ArrowUp' ? index - 1 : index + 1);
+      return;
+    }
+
     switch (e.key) {
-      case 'ArrowDown':
+      case 'ArrowDown': {
         e.preventDefault();
         const nextItem = items[currentIndex + 1];
         if (nextItem) nextItem.focus();
         break;
-        
-      case 'ArrowUp':
+      }
+
+      case 'ArrowUp': {
         e.preventDefault();
         const prevItem = items[currentIndex - 1];
         if (prevItem) prevItem.focus();
         break;
-        
+      }
+
       case 'Home':
         e.preventDefault();
         if (items[0]) items[0].focus();
         break;
-        
+
       case 'End':
         e.preventDefault();
         if (items[items.length - 1]) items[items.length - 1].focus();
         break;
-        
+
       case 'Enter':
       case ' ':
-        e.preventDefault();
-        toggleComplete(index);
+        // Only toggle when the list item itself is focused, so Enter/Space on a
+        // child button triggers that button's own action instead of double-firing.
+        if (e.target === currentItem) {
+          e.preventDefault();
+          toggleComplete(index);
+        }
         break;
-        
+
       case 'Delete':
       case 'Backspace':
-        e.preventDefault();
-        deleteTodo(index);
-        break;
-        
-      case 'Control+ArrowUp':
-      case 'Meta+ArrowUp':
-        e.preventDefault();
-        moveTodo(index, index - 1);
-        break;
-        
-      case 'Control+ArrowDown':
-      case 'Meta+ArrowDown':
-        e.preventDefault();
-        moveTodo(index, index + 1);
+        // Same guard: don't hijack these keys while a child button is focused.
+        if (e.target === currentItem) {
+          e.preventDefault();
+          deleteTodo(index);
+        }
         break;
     }
   };
@@ -672,12 +677,6 @@ const translations = {
     if (items[toIndex]) {
       items[toIndex].focus();
     }
-  };
-  
-  // Add keyboard drag-and-drop functionality
-  const addKeyboardDragListeners = () => {
-    // Keyboard drag functionality is handled in handleTodoKeydown
-    // This function exists for consistency with the renderTodos call
   };
   
   /**
