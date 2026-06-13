@@ -260,8 +260,9 @@ const translations = {
   const updateCharCount = () => {
     const remainingChars = MAX_CHARS - input.value.length;
     charCount.textContent = `${input.value.length} / ${MAX_CHARS}`; // Display character count
-    // Change color to red when nearing character limit
-    charCount.style.color = remainingChars < 20 ? "#e74c3c" : "#777";
+    // Change color to the danger accent when nearing the character limit.
+    // Uses CSS custom properties so the colour tracks the active (light/dark) theme.
+    charCount.style.color = remainingChars < 20 ? "var(--danger)" : "var(--muted)";
     // Disable the add button if input is empty
     document.getElementById("add-button").disabled = input.value.trim() === "";
   };
