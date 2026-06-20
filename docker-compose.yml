@@ -1,0 +1,13 @@
+# Static site served by nginx; the shared edge Caddy reverse-proxies the app's
+# subdomain to todo-web:80 over the external 'edge' network.
+services:
+  todo-web:
+    build: .
+    image: todo-web
+    container_name: todo-web
+    restart: unless-stopped
+    networks:
+      - edge
+networks:
+  edge:
+    external: true
