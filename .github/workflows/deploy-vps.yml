@@ -7,7 +7,22 @@ concurrency:
   group: deploy-vps
   cancel-in-progress: false
 jobs:
+  # Hand-written static files served by nginx: no bundler validates the paths in
+  # index.html, so a renamed script would 404 while the page still returns 200.
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: node scripts/check-assets.mjs
+
   deploy:
+    needs: test
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
