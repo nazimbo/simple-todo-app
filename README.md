@@ -115,6 +115,23 @@ When contributing to this project:
 4. Validate that security measures remain intact
 5. Update documentation for new features
 
+## Other things I've built
+
+Free, no account needed, all running in the browser:
+
+- **[Bamboozle](https://bamboozle.nazimbo.com)** — an online multiplayer party
+  game. Two teams invent fake answers to trivia questions, then bet their tokens
+  on which of the opponent's answers is the real one. 2–16 players, each on their
+  own phone.
+- **[Snake](https://snake.nazimbo.com)** — the classic, on canvas, with a
+  procedural chiptune soundtrack.
+- **[Sommet](https://sommet.nazimbo.com)** — a satirical swipe-to-decide game
+  about holding on to power.
+- **[Convertify](https://convertify.nazimbo.com)** — file conversion for
+  documents, images and audio.
+
+More at **[nazimbo.com](https://nazimbo.com)**.
+
 ## License
 
 This project is open source and available under the MIT License.
